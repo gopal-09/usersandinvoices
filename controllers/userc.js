@@ -104,14 +104,14 @@ const limit = parseInt(req.query.limit) || 10;
         try {
          const name =await User.findOne({ name:searchText })
         //  console.log(name._id);
-         const cumid = name? name._id:null;
+         const id = name? name._id:null;
 
           const invoices = await Invoice.find({
                 $or: [
                 { invoiceno: { $regex: searchText, $options: 'i' } },
                 { accountarray: { $elemMatch: { amount: { $regex: new RegExp(searchText, 'i')  } } } },
 
-                { customerid: cumid },
+                { customerid: id },
              
                 ]
           })
