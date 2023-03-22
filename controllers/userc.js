@@ -40,7 +40,8 @@ const createinvoice= async (req, res) => {
     var x=0;
     for(let i=0; i<accountarray.length; i++)
     {
-      x=x+accountarray[i].amount
+      //x=x+accountarray[i].amount
+      x=x+Number(accountarray[i].amount)
     }
     if(x!=totalamount)
     {
@@ -88,7 +89,7 @@ if (balanceToUpdate) {
   
   for(let i=0;i<accountarray.length;i++)
   {
-    updateBalances(year,accountarray[i].accountid,accountarray[i].amount);
+    updateBalances(year,accountarray[i].accountid,Number(accountarray[i].amount));
   }
   } catch (err) {
     console.log(err);
@@ -97,103 +98,34 @@ if (balanceToUpdate) {
   
 }
 const invoicelist= async(req,res)=> {
+  const searchText = req.query.searchText;
+const limit = parseInt(req.query.limit) || 10;
+        const skip = parseInt(req.query.skip) ||0
+        try {
+         const name =await User.findOne({ name:searchText })
+        //  console.log(name._id);
+         const cumid = name? name._id:null;
+
+          const invoices = await Invoice.find({
+                $or: [
+                { invoiceno: { $regex: searchText, $options: 'i' } },
+                { accountarray: { $elemMatch: { amount: { $regex: new RegExp(searchText, 'i')  } } } },
+
+                { customerid: cumid },
+             
+                ]
+          })
+          .skip(skip)
+          .limit(limit);
+          res.status(200).json(invoices);
+        } catch (error) {
+          console.error(error);
+          res.status(500).send('Internal server error');
+        }
   
-  const { skip = 0, limit = 10, searchText = '' } = req.query;
-  // Construct the pipeline for MongoDB aggregation
-  const pipeline = [
-    {
-      $lookup: {
-        from: 'Users',
-        localField: 'customerid',
-        foreignField: '_id',
-        as: 'User',
-      },
-    },
-    {
-      $unwind: {
-        path: '$User',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $project: {
-        _id: 1,
-        date: 1,
-        invoiceno: 1,
-        year: 1,
-        totalAmount: 1,
-        'customer._id': 1,
-        'User.name': 1,
-        accountarray: 1,
-        matchedAmount: {
-          $reduce: {
-            input: '$accountarray',
-            initialValue: 0,
-            in: {
-              $add: [
-                '$$value',
-                {
-                  $cond: {
-                    if: {
-                      $regexMatch: {
-                        input: {
-                          $toString: '$$this.amount',
-                        },
-                        regex: searchText,
-                        options: 'i',
-                      },
-                    },
-                    then: '$$this.amount',
-                    else: 0,
-                  },
-                },
-              ],
-            },
-          },
-        },
-      },
-    },
-    {
-      $match: {
-        $or: [
-          { invoiceno: new RegExp(searchText, 'i') },
-          { 'User.name': { $regex: searchText, $options: 'i' } },
-          { matchedAmount: { $ne: 0 } },
-        ],
-      },
-    },
-    {
-      $facet: {
-        totalCount: [
-          {
-            $group: {
-              _id: null,
-             // count: { $sum: 1 },
-            },
-          },
-        ],
-        invoices: [
-          { $skip: parseInt(skip) },
-          { $limit: parseInt(limit) },
-        ],
-      },
-    },
-  ];
-
-  try {
-    const result = await Invoice.aggregate(pipeline);
-
-    const { totalCount, invoices } = result[0];
-
-    res.json({
-      //totalCount: totalCount[0].count,
-      invoices,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal server error');
   }
-}
+
+
 
 module.exports ={createaccount,createinvoice,invoicelist} ;
 
