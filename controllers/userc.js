@@ -79,7 +79,7 @@ const createinvoice= async (req, res) => {
   async function updateBalances(year,id,amount) {
     let user= await User.findById(id)
     const balanceToUpdate = user.balances.find(balance => balance.year === year);
-    console.log(balanceToUpdate.balance);
+    //console.log(balanceToUpdate.balance);
 if (balanceToUpdate) {
   balanceToUpdate.balance+=amount;
   await user.save()
