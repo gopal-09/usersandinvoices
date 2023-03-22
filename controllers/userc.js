@@ -82,7 +82,6 @@ const createinvoice= async (req, res) => {
     console.log(balanceToUpdate.balance);
 if (balanceToUpdate) {
   balanceToUpdate.balance+=amount;
-  
   await user.save()
 }
 }   
@@ -110,10 +109,8 @@ const limit = parseInt(req.query.limit) || 10;
                 $or: [
                 { invoiceno: { $regex: searchText, $options: 'i' } },
                 { accountarray: { $elemMatch: { amount: { $regex: new RegExp(searchText, 'i')  } } } },
-
                 { customerid: id },
-             
-                ]
+             ]
           })
           .skip(skip)
           .limit(limit);
