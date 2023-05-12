@@ -16,6 +16,7 @@ mongoose.connect(process.env.URL, {
 .catch((error) => {
   console.error('Error connecting to MongoDB:', error);
 });
+//pr from br2
 app.get('/',(req,res)=>{
   res.send("hi nhy");
 })
