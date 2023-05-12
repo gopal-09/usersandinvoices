@@ -19,6 +19,7 @@ mongoose.connect(process.env.URL, {
 app.get('/',(req,res)=>{
   res.send("hi nhy");
 })
+// connect 
 app.listen(5000,(req,res)=>{
     console.log('server hitt')
 })
